@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_socketio import SocketIO, emit, join_room
-import eventlet
 import random
 import string
 
@@ -103,4 +102,4 @@ def handle_reset(data):
         emit('reset', {}, room=game_code)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, port=80)
