@@ -126,27 +126,35 @@ document.addEventListener('DOMContentLoaded', function() {
             let incrementMenu = '';
             let decrementMenu = '';
             if (host && host !== "None" && host !== "" && p) {
+                // Incrementer: collapsed plus sign with dropdown on hover
                 incrementMenu = `
-                    <div class="d-flex flex-column align-items-center justify-content-center ms-2" style="background: #22c55e; border-radius: 12px; overflow: hidden; height: 180px; min-width: 70px;">
-                        ${increments.map(inc => `
-                            <button class="btn border-0 py-2 w-100" style="background: #22c55e; color: #fff; font-weight: bold; font-size: 1.5rem; border-radius: 0;" onclick="window.updateScore('${p}', ${inc}); event.stopPropagation();">+${inc}</button>
-                        `).join('')}
+                    <div class="score-menu ms-2" style="position: relative;">
+                        <button class="btn btn-success" style="background: #22c55e; font-size: 1.2rem; font-weight: bold; border-radius: 50%; width: 36px; height: 36px; padding: 0;">+</button>
+                        <div class="score-dropdown" style="display: none; position: absolute; top: 110%; left: 50%; transform: translateX(-50%); background: #22c55e; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10;">
+                            ${increments.map(inc => `
+                                <button class="btn border-0 py-1 w-100" style="background: #22c55e; color: #fff; font-weight: bold; font-size: 1rem; border-radius: 0; min-width: 60px;" onclick="window.updateScore('${p}', ${inc}); event.stopPropagation();">+${inc}</button>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
+                // Decrementer: collapsed minus sign with dropdown on hover
                 decrementMenu = `
-                    <div class="d-flex flex-column align-items-center justify-content-center me-2" style="background: #ef4444; border-radius: 12px; overflow: hidden; height: 180px; min-width: 70px;">
-                        ${increments.map(inc => `
-                            <button class="btn border-0 py-2 w-100" style="background: #ef4444; color: #fff; font-weight: bold; font-size: 1.5rem; border-radius: 0;" onclick="window.updateScore('${p}', -${inc}); event.stopPropagation();">-${inc}</button>
-                        `).join('')}
+                    <div class="score-menu me-2" style="position: relative;">
+                        <button class="btn btn-danger" style="background: #ef4444; font-size: 1.2rem; font-weight: bold; border-radius: 50%; width: 36px; height: 36px; padding: 0;">-</button>
+                        <div class="score-dropdown" style="display: none; position: absolute; top: 110%; left: 50%; transform: translateX(-50%); background: #ef4444; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10;">
+                            ${increments.map(inc => `
+                                <button class="btn border-0 py-1 w-100" style="background: #ef4444; color: #fff; font-weight: bold; font-size: 1rem; border-radius: 0; min-width: 60px;" onclick="window.updateScore('${p}', -${inc}); event.stopPropagation();">-${inc}</button>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             }
             li.innerHTML = `
-                <div class="d-flex align-items-center justify-content-start w-100" style="min-height: 180px;">
-                    <span class="mx-3 flex-grow-1" style="font-size:1.3rem; min-width:120px; text-align:right;">${p}</span>
+                <div class="d-flex align-items-center w-100" style="min-height: 120px;">
+                    <span class="me-3 flex-grow-1" style="font-size:1.1rem; min-width:120px; text-align:left;">${p}</span>
                     <div class="d-flex align-items-center">
-                        <span class="badge rounded-pill mx-2" id="score-${p}" style="font-size:2rem; background:#2563eb; color:#fff; min-width:60px;">${scores[p] !== undefined ? scores[p] : 0}</span>
                         ${decrementMenu}
+                        <span class="badge rounded-pill mx-2" id="score-${p}" style="font-size:1.2rem; background:#2563eb; color:#fff; min-width:40px;">${scores[p] !== undefined ? scores[p] : 0}</span>
                         ${incrementMenu}
                     </div>
                 </div>
@@ -183,6 +191,22 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     } else {
         window.updateScore = function() {};
+    }
+});
+
+// Add this after your DOMContentLoaded handler or in a <script> block to handle the hover dropdown:
+document.addEventListener('mouseover', function(e) {
+    if (e.target.closest('.score-menu')) {
+        const menu = e.target.closest('.score-menu');
+        const dropdown = menu.querySelector('.score-dropdown');
+        if (dropdown) dropdown.style.display = 'flex';
+    }
+});
+document.addEventListener('mouseout', function(e) {
+    if (e.target.closest('.score-menu')) {
+        const menu = e.target.closest('.score-menu');
+        const dropdown = menu.querySelector('.score-dropdown');
+        if (dropdown) dropdown.style.display = 'none';
     }
 });
 </script>
