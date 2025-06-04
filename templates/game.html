@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}
+Game Room
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h2>Game Code: <span id="game-code">{{ game_code }}</span></h2>
+    {% if host %}
+        <div class="alert alert-info">You are the host.</div>
+        <button id="reset-btn" class="btn btn-warning">Reset Buzzer</button>
+        <div id="buzzed-player" class="mt-4"></div>
+    {% elif player %}
+        <div class="alert alert-success">You are playing as <b>{{ player }}</b></div>
+        <button id="buzz-btn" class="btn btn-primary btn-lg mt-4">Buzz!</button>
+        <div id="buzzed-player" class="mt-4"></div>
+    {% endif %}
+    <div id="buzzed-status" class="mt-4"></div>
+    <div class="mt-4">
+        <h4>Players in this game:</h4>
+        <ul id="player-list" class="list-group"></ul>
+    </div>
+</div>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const socket = io();
+    const gameCode = "{{ game_code }}";
+    const player = "{{ player|default('') }}";
+    const host = "{{ host|default('') }}";
+
+    // Only send player if it is not empty
+    if (player && player !== "None") {
+        socket.emit('join', {game_code: gameCode, player: player});
+    } else {
+        socket.emit('join', {game_code: gameCode});
+    }
+
+    // Request the player list on join
+    socket.emit('get_players', {game_code: gameCode});
+
+    if (player) {
+        const buzzBtn = document.getElementById('buzz-btn');
+        if (buzzBtn) {
+            buzzBtn.onclick = function() {
+                socket.emit('buzz', {game_code: gameCode, player: player});
+            };
+        }
+    }
+
+    if (host) {
+        const resetBtn = document.getElementById('reset-btn');
+        if (resetBtn) {
+            resetBtn.onclick = function() {
+                socket.emit('reset', {game_code: gameCode});
+            };
+        }
+    }
+
+    socket.on('buzzed', function(data) {
+        document.getElementById('buzzed-player').innerHTML = 
+            `<div class="alert alert-info"><b>${data.player}</b> buzzed in first!</div>`;
+        document.getElementById('buzzed-status').innerHTML = '';
+        if (player) {
+            const buzzBtn = document.getElementById('buzz-btn');
+            if (buzzBtn) buzzBtn.disabled = true;
+        }
+    });
+
+    socket.on('reset', function() {
+        document.getElementById('buzzed-player').innerHTML = '';
+        document.getElementById('buzzed-status').innerHTML = '';
+        if (player) {
+            const buzzBtn = document.getElementById('buzz-btn');
+            if (buzzBtn) buzzBtn.disabled = false;
+        }
+    });
+
+    // Update player list
+    socket.on('player_list', function(data) {
+        const playerList = document.getElementById('player-list');
+        playerList.innerHTML = '';
+        data.players.forEach(function(p) {
+            const li = document.createElement('li');
+            li.className = "list-group-item";
+            li.textContent = p;
+            playerList.appendChild(li);
+        });
+    });
+
+    // Request updated player list when someone joins
+    socket.on('update_players', function() {
+        socket.emit('get_players', {game_code: gameCode});
+    });
+
+    document.addEventListener('keydown', function(e) {
+        // Only trigger if not typing in an input or textarea
+        if (
+            e.code === 'Space' &&
+            document.activeElement.tagName !== 'INPUT' &&
+            document.activeElement.tagName !== 'TEXTAREA'
+        ) {
+            e.preventDefault();
+            if (host && host !== "None" && host !== "") {
+                // Host: reset buzzer
+                socket.emit('reset', {game_code: gameCode});
+            } else if (player && player !== "None" && player !== "") {
+                // Player: buzz
+                socket.emit('buzz', {game_code: gameCode, player: player});
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

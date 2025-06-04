@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}
+Join Game
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="mb-4">Join a Game</h1>
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/join">
+        <div class="mb-3">
+            <label for="gameCode" class="form-label">Game Code</label>
+            <input type="text" class="form-control" id="gameCode" name="game_code" required>
+        </div>
+        <div class="mb-3">
+            <label for="playerName" class="form-label">Your Name</label>
+            <input type="text" class="form-control" id="playerName" name="player_name" required>
+        </div>
+        <button type="submit" class="btn btn-success">Join Game</button>
+        <a href="/" class="btn btn-secondary ms-2">Back</a>
+    </form>
+</div>
+{% endblock %}
