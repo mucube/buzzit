@@ -194,19 +194,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Add this after your DOMContentLoaded handler or in a <script> block to handle the hover dropdown:
+// Add this after your DOMContentLoaded handler or in a <script> block to handle the hover/click dropdown:
+
+// Track open dropdowns
+let openDropdown = null;
+let lockedDropdown = null;
+
+// Show dropdown on hover (only if not locked)
 document.addEventListener('mouseover', function(e) {
-    if (e.target.closest('.score-menu')) {
-        const menu = e.target.closest('.score-menu');
+    const menu = e.target.closest('.score-menu');
+    if (menu) {
         const dropdown = menu.querySelector('.score-dropdown');
-        if (dropdown) dropdown.style.display = 'flex';
+        if (dropdown && dropdown !== lockedDropdown) {
+            dropdown.style.display = 'flex';
+            openDropdown = dropdown;
+        }
     }
 });
+
+// Hide dropdown on mouseout (only if not locked)
 document.addEventListener('mouseout', function(e) {
-    if (e.target.closest('.score-menu')) {
-        const menu = e.target.closest('.score-menu');
+    const menu = e.target.closest('.score-menu');
+    if (menu) {
         const dropdown = menu.querySelector('.score-dropdown');
-        if (dropdown) dropdown.style.display = 'none';
+        if (
+            dropdown &&
+            dropdown !== lockedDropdown &&
+            !menu.contains(e.relatedTarget)
+        ) {
+            dropdown.style.display = 'none';
+            if (openDropdown === dropdown) openDropdown = null;
+        }
+    }
+});
+
+// Toggle dropdown lock on click of plus/minus
+document.addEventListener('click', function(e) {
+    const menu = e.target.closest('.score-menu');
+    if (menu && (e.target.textContent.trim() === '+' || e.target.textContent.trim() === '-')) {
+        const dropdown = menu.querySelector('.score-dropdown');
+        if (dropdown) {
+            if (lockedDropdown === dropdown) {
+                // Unlock and hide
+                dropdown.style.display = 'none';
+                lockedDropdown = null;
+            } else {
+                // Lock this dropdown open, close any other
+                if (lockedDropdown && lockedDropdown !== dropdown) lockedDropdown.style.display = 'none';
+                dropdown.style.display = 'flex';
+                lockedDropdown = dropdown;
+            }
+            e.stopPropagation();
+        }
+    } else if (!e.target.closest('.score-menu')) {
+        // Clicked outside, close any locked dropdown
+        if (lockedDropdown) {
+            lockedDropdown.style.display = 'none';
+            lockedDropdown = null;
+        }
     }
 });
 </script>
