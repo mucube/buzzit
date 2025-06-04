@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_socketio import SocketIO, emit, join_room
 import eventlet
 import random
@@ -10,28 +10,27 @@ socketio = SocketIO(app)
 
 games = dict()  # {game_code: {'host': ..., 'buzzed': None, 'players': set()}}
 
-def generate_game_code(length=5):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+def generate_game_code(length=6):
+    return ''.join(random.choices(string.digits, k=length))
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/host', methods=['GET', 'POST'])
+@app.route('/host')
 def host():
-    if request.method == 'POST':
-        host_name = request.form['host_name']
-        game_code = generate_game_code()
-        while game_code in games:  # Ensure uniqueness
-            game_code = generate_game_code()
-        games[game_code] = {
-            'host': host_name,
-            'buzzed': None,
-            'players': set(),
-            'scores': dict()  # player_name: score
-        }
-        return redirect(url_for('game', game_code=game_code, host=1))
-    return render_template('host.html')
+    # Generate a unique game code
+    game_code = generate_game_code()
+    session['host'] = True
+    # Initialize the game in the games dict
+    games[game_code] = {
+        'host': True,
+        'buzzed': None,
+        'players': set(),
+        'scores': {}
+    }
+    # Redirect straight to the game page as host
+    return redirect(url_for('game', game_code=game_code, host='1'))
 
 @app.route('/join', methods=['GET', 'POST'])
 def join():
