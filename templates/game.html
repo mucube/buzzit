@@ -16,9 +16,9 @@ Game Room
     {% elif player %}
         <div class="alert alert-success">You are playing as <b>{{ player }}</b></div>
         <div class="alert alert-info">
-            Press <kbd>Space</kbd> to reset the buzzer.
+            Press <kbd>Space</kbd> to buzz.
         </div>
-        <button id="buzz-btn" class="btn btn-primary btn-lg mt-4">Buzz!</button>
+        <button id="buzz-btn" class="btn btn-primary btn-lg mt-4" style="font-size:1rem;">Buzz!</button>
         <div id="buzzed-player" class="mt-4"></div>
     {% endif %}
     <div id="buzzed-status" class="mt-4"></div>
@@ -128,33 +128,33 @@ document.addEventListener('DOMContentLoaded', function() {
             if (host && host !== "None" && host !== "" && p) {
                 // Incrementer: collapsed plus sign with dropdown on hover
                 incrementMenu = `
-                    <div class="score-menu ms-2" style="position: relative;">
-                        <button class="btn btn-success" style="background: #22c55e; font-size: 1.2rem; font-weight: bold; border-radius: 50%; width: 36px; height: 36px; padding: 0;">+</button>
+                    <div class="score-menu ms-1" style="position: relative;">
+                        <button class="btn btn-success" style="background: #22c55e; font-size: 1rem; font-weight: bold; border-radius: 50%; width: 28px; height: 28px; padding: 0;">+</button>
                         <div class="score-dropdown" style="display: none; position: absolute; top: 110%; left: 50%; transform: translateX(-50%); background: #22c55e; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10;">
                             ${increments.map(inc => `
-                                <button class="btn border-0 py-1 w-100" style="background: #22c55e; color: #fff; font-weight: bold; font-size: 1rem; border-radius: 0; min-width: 60px;" onclick="window.updateScore('${p}', ${inc}); event.stopPropagation();">+${inc}</button>
+                                <button class="btn border-0 py-1 w-100" style="background: #22c55e; color: #fff; font-weight: bold; font-size: 0.9rem; border-radius: 0; min-width: 40px;" onclick="window.updateScore('${p}', ${inc}); event.stopPropagation();">+${inc}</button>
                             `).join('')}
                         </div>
                     </div>
                 `;
                 // Decrementer: collapsed minus sign with dropdown on hover
                 decrementMenu = `
-                    <div class="score-menu me-2" style="position: relative;">
-                        <button class="btn btn-danger" style="background: #ef4444; font-size: 1.2rem; font-weight: bold; border-radius: 50%; width: 36px; height: 36px; padding: 0;">-</button>
+                    <div class="score-menu me-1" style="position: relative;">
+                        <button class="btn btn-danger" style="background: #ef4444; font-size: 1rem; font-weight: bold; border-radius: 50%; width: 28px; height: 28px; padding: 0;">-</button>
                         <div class="score-dropdown" style="display: none; position: absolute; top: 110%; left: 50%; transform: translateX(-50%); background: #ef4444; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10;">
                             ${increments.map(inc => `
-                                <button class="btn border-0 py-1 w-100" style="background: #ef4444; color: #fff; font-weight: bold; font-size: 1rem; border-radius: 0; min-width: 60px;" onclick="window.updateScore('${p}', -${inc}); event.stopPropagation();">-${inc}</button>
+                                <button class="btn border-0 py-1 w-100" style="background: #ef4444; color: #fff; font-weight: bold; font-size: 0.9rem; border-radius: 0; min-width: 40px;" onclick="window.updateScore('${p}', -${inc}); event.stopPropagation();">-${inc}</button>
                             `).join('')}
                         </div>
                     </div>
                 `;
             }
             li.innerHTML = `
-                <div class="d-flex align-items-center w-100" style="min-height: 120px;">
-                    <span class="me-3 flex-grow-1" style="font-size:1.1rem; min-width:120px; text-align:left;">${p}</span>
+                <div class="d-flex align-items-center w-100" style="min-height: 60px;">
+                    <span class="me-2 flex-grow-1" style="font-size:1rem; min-width:80px; text-align:left;">${p}</span>
                     <div class="d-flex align-items-center">
                         ${decrementMenu}
-                        <span class="badge rounded-pill mx-2" id="score-${p}" style="font-size:1.2rem; background:#2563eb; color:#fff; min-width:40px;">${scores[p] !== undefined ? scores[p] : 0}</span>
+                        <span class="badge rounded-pill mx-1" id="score-${p}" style="font-size:1rem; background:#2563eb; color:#fff; min-width:28px;">${scores[p] !== undefined ? scores[p] : 0}</span>
                         ${incrementMenu}
                     </div>
                 </div>
