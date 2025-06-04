@@ -24,7 +24,12 @@ def host():
         game_code = generate_game_code()
         while game_code in games:  # Ensure uniqueness
             game_code = generate_game_code()
-        games[game_code] = {'host': host_name, 'buzzed': None, 'players': set()}
+        games[game_code] = {
+            'host': host_name,
+            'buzzed': None,
+            'players': set(),
+            'scores': dict()  # player_name: score
+        }
         return redirect(url_for('game', game_code=game_code, host=1))
     return render_template('host.html')
 
@@ -62,16 +67,34 @@ def on_join(data):
     game_code = data['game_code']
     player = data.get('player')
     join_room(game_code)
-    # Only add player if player is not None and not empty string
     if player and player.strip() and game_code in games:
         games[game_code]['players'].add(player)
+        # Initialize score if not present
+        if player not in games[game_code]['scores']:
+            games[game_code]['scores'][player] = 0
         emit('update_players', room=game_code)
 
 @socketio.on('get_players')
 def handle_get_players(data):
     game_code = data['game_code']
     if game_code in games:
-        emit('player_list', {'players': list(games[game_code]['players'])}, room=request.sid)
+        emit('player_list', {
+            'players': list(games[game_code]['players']),
+            'scores': games[game_code]['scores']
+        }, room=request.sid)
+
+@socketio.on('update_score')
+def handle_update_score(data):
+    game_code = data['game_code']
+    player = data['player']
+    delta = int(data['delta'])
+    if game_code in games and player in games[game_code]['scores']:
+        games[game_code]['scores'][player] += delta
+        # Broadcast updated scores to all clients in the game
+        emit('player_list', {
+            'players': list(games[game_code]['players']),
+            'scores': games[game_code]['scores']
+        }, room=game_code)
 
 @socketio.on('reset')
 def handle_reset(data):

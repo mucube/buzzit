@@ -8,20 +8,57 @@ Game Room
 <div class="container mt-5">
     <h2>Game Code: <span id="game-code">{{ game_code }}</span></h2>
     {% if host %}
-        <div class="alert alert-info">You are the host.</div>
+        <div class="alert alert-info">You are the host.<br>
+            Press <kbd>Space</kbd> to reset the buzzer.
+        </div>
         <button id="reset-btn" class="btn btn-warning">Reset Buzzer</button>
         <div id="buzzed-player" class="mt-4"></div>
     {% elif player %}
         <div class="alert alert-success">You are playing as <b>{{ player }}</b></div>
+        <div class="alert alert-info">
+            Press <kbd>Space</kbd> to reset the buzzer.
+        </div>
         <button id="buzz-btn" class="btn btn-primary btn-lg mt-4">Buzz!</button>
         <div id="buzzed-player" class="mt-4"></div>
     {% endif %}
     <div id="buzzed-status" class="mt-4"></div>
     <div class="mt-4">
-        <h4>Players in this game:</h4>
+        <h4>Players & Scores:</h4>
         <ul id="player-list" class="list-group"></ul>
     </div>
 </div>
+<style>
+.score-menu {
+    position: relative;
+    display: inline-block;
+}
+.score-dropdown {
+    display: none;
+    position: absolute;
+    z-index: 10;
+    min-width: 70px;
+}
+.score-menu-left .score-dropdown {
+    left: 0;
+    top: 100%;
+}
+.score-menu-right .score-dropdown {
+    right: 0;
+    top: 100%;
+}
+.score-menu:hover .score-dropdown,
+.score-menu:focus-within .score-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.score-btn {
+    width: 48px;
+    margin-bottom: 2px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+</style>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -77,14 +114,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Update player list
+    // Update player list and scores
     socket.on('player_list', function(data) {
         const playerList = document.getElementById('player-list');
         playerList.innerHTML = '';
+        const scores = data.scores || {};
+        const increments = [10, 5, 1]; // Top to bottom
         data.players.forEach(function(p) {
             const li = document.createElement('li');
             li.className = "list-group-item";
-            li.textContent = p;
+            let incrementMenu = '';
+            let decrementMenu = '';
+            if (host && host !== "None" && host !== "" && p) {
+                incrementMenu = `
+                    <div class="d-flex flex-column align-items-center justify-content-center ms-2" style="background: #22c55e; border-radius: 12px; overflow: hidden; height: 180px; min-width: 70px;">
+                        ${increments.map(inc => `
+                            <button class="btn border-0 py-2 w-100" style="background: #22c55e; color: #fff; font-weight: bold; font-size: 1.5rem; border-radius: 0;" onclick="window.updateScore('${p}', ${inc}); event.stopPropagation();">+${inc}</button>
+                        `).join('')}
+                    </div>
+                `;
+                decrementMenu = `
+                    <div class="d-flex flex-column align-items-center justify-content-center me-2" style="background: #ef4444; border-radius: 12px; overflow: hidden; height: 180px; min-width: 70px;">
+                        ${increments.map(inc => `
+                            <button class="btn border-0 py-2 w-100" style="background: #ef4444; color: #fff; font-weight: bold; font-size: 1.5rem; border-radius: 0;" onclick="window.updateScore('${p}', -${inc}); event.stopPropagation();">-${inc}</button>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            li.innerHTML = `
+                <div class="d-flex align-items-center justify-content-start w-100" style="min-height: 180px;">
+                    <span class="mx-3 flex-grow-1" style="font-size:1.3rem; min-width:120px; text-align:right;">${p}</span>
+                    <div class="d-flex align-items-center">
+                        <span class="badge rounded-pill mx-2" id="score-${p}" style="font-size:2rem; background:#2563eb; color:#fff; min-width:60px;">${scores[p] !== undefined ? scores[p] : 0}</span>
+                        ${decrementMenu}
+                        ${incrementMenu}
+                    </div>
+                </div>
+            `;
             playerList.appendChild(li);
         });
     });
@@ -94,8 +160,8 @@ document.addEventListener('DOMContentLoaded', function() {
         socket.emit('get_players', {game_code: gameCode});
     });
 
+    // Spacebar logic (unchanged)
     document.addEventListener('keydown', function(e) {
-        // Only trigger if not typing in an input or textarea
         if (
             e.code === 'Space' &&
             document.activeElement.tagName !== 'INPUT' &&
@@ -103,14 +169,21 @@ document.addEventListener('DOMContentLoaded', function() {
         ) {
             e.preventDefault();
             if (host && host !== "None" && host !== "") {
-                // Host: reset buzzer
                 socket.emit('reset', {game_code: gameCode});
             } else if (player && player !== "None" && player !== "") {
-                // Player: buzz
                 socket.emit('buzz', {game_code: gameCode, player: player});
             }
         }
     });
+
+    // Only expose updateScore if host
+    if (host && host !== "None" && host !== "") {
+        window.updateScore = function(playerName, delta) {
+            socket.emit('update_score', {game_code: gameCode, player: playerName, delta: delta});
+        };
+    } else {
+        window.updateScore = function() {};
+    }
 });
 </script>
 {% endblock %}
